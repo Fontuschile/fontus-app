@@ -2728,8 +2728,9 @@ if (loaded) showToast(`✅ Datos cargados — ${CLIENTES.length} clientes`);
 // SUPABASE — Configuración
 // Reemplaza SUPABASE_URL y SUPABASE_KEY con tus valores
 // =====================================================
-const SUPABASE_URL = window.ENV_SUPABASE_URL || 'TU_SUPABASE_URL_AQUI';
-const SUPABASE_KEY = window.ENV_SUPABASE_KEY || 'TU_SUPABASE_ANON_KEY_AQUI';
+// ⚙️ CONFIGURACIÓN FONTUS — edita solo estas 2 líneas
+const SUPABASE_URL = 'https://tsectoflhwutporbgbqq.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_FjEqk-V0f9H9eAx-w4eptA_r-EUYrqd';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // =====================================================
