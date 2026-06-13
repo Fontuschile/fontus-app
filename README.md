@@ -1,28 +1,34 @@
 # FONTUS — App de Gestión Online
 
-## Instrucciones de instalación
+## Credenciales del proyecto
+- **Supabase URL:** https://cdwegyosuozcffxilueg.supabase.co
+- **GitHub:** github.com/Fontuschile/fontus-app
+- **App URL:** fontuschile.github.io/fontus-app
 
-### Paso 1 — Configurar Supabase
-1. Ve a supabase.com y abre tu proyecto
-2. En el menú izquierdo clic en "SQL Editor"
-3. Copia y pega el contenido de `schema.sql`
-4. Clic en "Run"
-5. Ve a Project Settings → API
-6. Copia "Project URL" y "anon public key"
+## Pasos para dejar funcionando
 
-### Paso 2 — Configurar Vercel
-1. Importa este repositorio en Vercel
-2. En "Environment Variables" agrega:
-   - `SUPABASE_URL` = tu Project URL
-   - `SUPABASE_KEY` = tu anon public key
-3. Deploy
+### 1 — Subir index.html correctamente (con GitHub Desktop)
+1. Instalar GitHub Desktop desde desktop.github.com
+2. Iniciar sesión con cuenta GitHub
+3. Clonar repositorio: Fontuschile/fontus-app
+4. Reemplazar index.html en la carpeta clonada
+5. Commit "Corregir index.html" → Push origin
 
-### Paso 3 — Dominio en Hosting.cl
+### 2 — Ejecutar SQL en Supabase
+1. supabase.com → tu proyecto → SQL Editor
+2. New query → pegar contenido de schema.sql → Run
+3. Debe aparecer verde sin errores
+
+### 3 — Crear usuarios del equipo
+1. Supabase → Authentication → Users
+2. Add user → Create new user
+3. Crear uno por cada miembro: Poli, Felipe, Pato, Diego
+
+### 4 — Conectar dominio app.fontus.cl (Hosting.cl)
 1. Login en panel.hosting.cl
-2. DNS Zone Editor
-3. Agregar CNAME: `app` → `cname.vercel-dns.com`
-4. En Vercel: Settings → Domains → agregar `app.fontus.cl`
+2. DNS Zone Editor → Add Record
+3. Tipo: CNAME | Nombre: app | Valor: fontuschile.github.io
+4. Guardar y esperar 24-48 horas
 
-### Paso 4 — Crear usuarios
-1. En Supabase → Authentication → Users
-2. "Invite user" con el correo de cada miembro del equipo
+## Equipo FONTUS
+- Poli, Felipe, Pato, Diego
