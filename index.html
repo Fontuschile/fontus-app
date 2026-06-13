@@ -218,13 +218,7 @@ textarea{resize:vertical;min-height:70px}
     <input class="login-input" type="password" id="login-pass" placeholder="Contraseña" autocomplete="current-password">
     <button class="login-btn" onclick="doLogin()">Ingresar</button>
     <div class="login-error" id="login-error"></div>
-    <div id="reset-area" style="display:none;margin-top:10px">
-      <input class="login-input" type="email" id="reset-email" placeholder="Correo para recuperar contraseña" autocomplete="email">
-      <button class="login-btn" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2)" onclick="doResetPassword()">Enviar enlace de recuperación</button>
-      <div class="login-error" id="reset-msg" style="color:var(--green)"></div>
-    </div>
-    <div style="margin-top:14px"><a href="#" onclick="toggleReset(event)" style="font-size:12px;color:var(--text3);text-decoration:none" id="reset-link">¿Olvidaste tu contraseña?</a></div>
-    <div style="font-size:11px;color:var(--text3);margin-top:12px">FONTUS © 2025 · app.fontus.cl</div>
+    <div style="font-size:11px;color:var(--text3);margin-top:20px">FONTUS © 2025 · app.fontus.cl</div>
   </div>
 </div>
 <div class="shell">
@@ -2735,8 +2729,8 @@ if (loaded) showToast(`✅ Datos cargados — ${CLIENTES.length} clientes`);
 // Reemplaza SUPABASE_URL y SUPABASE_KEY con tus valores
 // =====================================================
 // ⚙️ CONFIGURACIÓN FONTUS — edita solo estas 2 líneas
-const SUPABASE_URL = 'https://tsectoflhwutporbgbqq.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_FjEqk-V0f9H9eAx-w4eptA_r-EUYrqd';
+const SUPABASE_URL = 'https://cdwegyosuozcffxilueg.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkd2VneW9zdW96Y2ZmeGlsdWVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4NzIyMjAsImV4cCI6MjA5NjQ0ODIyMH0.elhqZVjxz6KdYYUtucxp8UKnjmY4dNU5PePXgNrkjQ8';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // =====================================================
@@ -2746,63 +2740,11 @@ async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const pass  = document.getElementById('login-pass').value;
   const errEl = document.getElementById('login-error');
-  const btn   = document.querySelector('.login-btn');
   errEl.textContent = '';
   if (!email||!pass){errEl.textContent='Completa todos los campos';return;}
-  btn.textContent='Ingresando...'; btn.disabled=true;
-  try {
-    const {data,error} = await sb.auth.signInWithPassword({email,password:pass});
-    btn.textContent='Ingresar'; btn.disabled=false;
-    if (error) {
-      const msg = error.message||'';
-      if (msg.toLowerCase().includes('email not confirmed')||msg.toLowerCase().includes('email_not_confirmed')) {
-        errEl.textContent='Debes confirmar tu correo. Revisa tu bandeja de entrada y haz clic en el enlace de activación.';
-      } else if (msg.toLowerCase().includes('invalid login credentials')||msg.toLowerCase().includes('invalid_credentials')) {
-        errEl.textContent='Correo o contraseña incorrectos.';
-      } else if (msg.toLowerCase().includes('network')||msg.toLowerCase().includes('fetch')) {
-        errEl.textContent='Error de conexión. Verifica tu internet.';
-      } else {
-        errEl.textContent='Error: '+msg;
-      }
-      return;
-    }
-    onLogin(data.user);
-  } catch(e) {
-    btn.textContent='Ingresar'; btn.disabled=false;
-    errEl.textContent='Error inesperado: '+(e.message||e);
-  }
-}
-
-function toggleReset(e) {
-  e.preventDefault();
-  const area = document.getElementById('reset-area');
-  const link = document.getElementById('reset-link');
-  const emailInput = document.getElementById('login-email');
-  if (area.style.display==='none') {
-    area.style.display='block';
-    const em = document.getElementById('reset-email');
-    if (emailInput&&emailInput.value) em.value=emailInput.value;
-    link.textContent='Cancelar';
-  } else {
-    area.style.display='none';
-    link.textContent='¿Olvidaste tu contraseña?';
-    document.getElementById('reset-msg').textContent='';
-  }
-}
-
-async function doResetPassword() {
-  const email = document.getElementById('reset-email').value.trim();
-  const msgEl = document.getElementById('reset-msg');
-  msgEl.textContent='';
-  if (!email){msgEl.style.color='var(--red)';msgEl.textContent='Ingresa tu correo';return;}
-  const {error} = await sb.auth.resetPasswordForEmail(email);
-  if (error) {
-    msgEl.style.color='var(--red)';
-    msgEl.textContent='Error: '+error.message;
-  } else {
-    msgEl.style.color='var(--green)';
-    msgEl.textContent='✅ Enlace enviado. Revisa tu correo (también el spam).';
-  }
+  const {data,error} = await sb.auth.signInWithPassword({email,password:pass});
+  if (error){errEl.textContent='Correo o contraseña incorrectos';return;}
+  onLogin(data.user);
 }
 
 async function doLogout() {
@@ -2889,26 +2831,6 @@ async function saveToSupabase(tabla, datos) {
 // =====================================================
 // VERIFICAR SESIÓN AL INICIAR
 // =====================================================
-
-// Escuchar cambios de estado de auth (magic links, reset de contraseña, etc.)
-sb.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_IN' && session) {
-    onLogin(session.user);
-  } else if (event === 'PASSWORD_RECOVERY') {
-    // Cuando el usuario llega desde un enlace de recuperación, mostrar formulario de nueva contraseña
-    const newPass = prompt('Ingresa tu nueva contraseña:');
-    if (newPass) {
-      sb.auth.updateUser({password: newPass}).then(({error}) => {
-        if (error) showToast('Error al cambiar contraseña: '+error.message);
-        else showToast('✅ Contraseña actualizada. Ya puedes ingresar.');
-      });
-    }
-  } else if (event === 'SIGNED_OUT') {
-    document.getElementById('login-overlay').style.display='flex';
-    document.getElementById('user-chip').style.display='none';
-  }
-});
-
 async function checkSession() {
   const {data:{session}} = await sb.auth.getSession();
   if (session) {
