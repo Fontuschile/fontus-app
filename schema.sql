@@ -1,13 +1,12 @@
 -- =====================================================
 -- FONTUS — Schema base de datos Supabase
--- Ejecutar en SQL Editor de Supabase
+-- Versión corregida: usa IF NOT EXISTS para evitar errores
 -- =====================================================
 
--- Habilitar UUID
 create extension if not exists "uuid-ossp";
 
 -- CLIENTES
-create table clientes (
+create table if not exists clientes (
   id bigserial primary key,
   nombre text not null,
   rut text default '',
@@ -36,7 +35,7 @@ create table clientes (
 );
 
 -- MANTENCIONES
-create table mantenciones (
+create table if not exists mantenciones (
   id bigserial primary key,
   cliente_id bigint references clientes(id) on delete cascade,
   fecha date not null,
@@ -53,7 +52,7 @@ create table mantenciones (
 );
 
 -- FOTOS
-create table fotos (
+create table if not exists fotos (
   id bigserial primary key,
   cliente_id bigint references clientes(id) on delete cascade,
   mantencion_id bigint references mantenciones(id) on delete cascade,
@@ -64,7 +63,7 @@ create table fotos (
 );
 
 -- PAGOS
-create table pagos (
+create table if not exists pagos (
   id bigserial primary key,
   cliente_id bigint references clientes(id) on delete cascade,
   mes text not null,
@@ -76,7 +75,7 @@ create table pagos (
 );
 
 -- MAQUINAS
-create table maquinas (
+create table if not exists maquinas (
   id bigserial primary key,
   modelo text not null,
   color text default 'Blanco',
@@ -88,7 +87,7 @@ create table maquinas (
 );
 
 -- INSUMOS
-create table insumos (
+create table if not exists insumos (
   id bigserial primary key,
   nombre text not null,
   categoria text default 'Accesorio',
@@ -100,8 +99,8 @@ create table insumos (
   created_at timestamptz default now()
 );
 
--- PLANES DE MANTENCIÓN
-create table planes (
+-- PLANES
+create table if not exists planes (
   id bigserial primary key,
   cliente_id bigint references clientes(id) on delete cascade,
   tipo text default 'basico',
@@ -114,7 +113,7 @@ create table planes (
 );
 
 -- CONTACTOS
-create table contactos (
+create table if not exists contactos (
   id bigserial primary key,
   cliente_id bigint references clientes(id) on delete cascade,
   fecha date not null,
@@ -126,7 +125,7 @@ create table contactos (
 );
 
 -- AGENDA
-create table agenda (
+create table if not exists agenda (
   id bigserial primary key,
   cliente_id bigint references clientes(id) on delete cascade,
   fecha date not null,
@@ -138,7 +137,7 @@ create table agenda (
 );
 
 -- CHANGELOG
-create table changelog (
+create table if not exists changelog (
   id bigserial primary key,
   cliente_id bigint references clientes(id) on delete cascade,
   fecha date not null,
@@ -148,10 +147,7 @@ create table changelog (
   created_at timestamptz default now()
 );
 
--- USUARIOS FONTUS (para login)
--- Esto lo maneja Supabase Auth automáticamente
-
--- RLS (Row Level Security) - solo usuarios autenticados pueden ver datos
+-- RLS
 alter table clientes enable row level security;
 alter table mantenciones enable row level security;
 alter table fotos enable row level security;
@@ -163,7 +159,19 @@ alter table contactos enable row level security;
 alter table agenda enable row level security;
 alter table changelog enable row level security;
 
--- Políticas: solo usuarios autenticados
+-- Eliminar políticas si existen antes de crearlas
+drop policy if exists "Authenticated users only" on clientes;
+drop policy if exists "Authenticated users only" on mantenciones;
+drop policy if exists "Authenticated users only" on fotos;
+drop policy if exists "Authenticated users only" on pagos;
+drop policy if exists "Authenticated users only" on maquinas;
+drop policy if exists "Authenticated users only" on insumos;
+drop policy if exists "Authenticated users only" on planes;
+drop policy if exists "Authenticated users only" on contactos;
+drop policy if exists "Authenticated users only" on agenda;
+drop policy if exists "Authenticated users only" on changelog;
+
+-- Crear políticas
 create policy "Authenticated users only" on clientes for all using (auth.role() = 'authenticated');
 create policy "Authenticated users only" on mantenciones for all using (auth.role() = 'authenticated');
 create policy "Authenticated users only" on fotos for all using (auth.role() = 'authenticated');
@@ -175,9 +183,15 @@ create policy "Authenticated users only" on contactos for all using (auth.role()
 create policy "Authenticated users only" on agenda for all using (auth.role() = 'authenticated');
 create policy "Authenticated users only" on changelog for all using (auth.role() = 'authenticated');
 
--- Storage bucket para fotos
-insert into storage.buckets (id, name, public) values ('fontus-fotos', 'fontus-fotos', true);
+-- Storage bucket para fotos (solo si no existe)
+insert into storage.buckets (id, name, public)
+values ('fontus-fotos', 'fontus-fotos', true)
+on conflict (id) do nothing;
+
+drop policy if exists "Authenticated upload" on storage.objects;
+drop policy if exists "Public read" on storage.objects;
+drop policy if exists "Authenticated delete" on storage.objects;
+
 create policy "Authenticated upload" on storage.objects for insert with check (auth.role() = 'authenticated' and bucket_id = 'fontus-fotos');
 create policy "Public read" on storage.objects for select using (bucket_id = 'fontus-fotos');
 create policy "Authenticated delete" on storage.objects for delete using (auth.role() = 'authenticated' and bucket_id = 'fontus-fotos');
-
